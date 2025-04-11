@@ -36,7 +36,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./resources
+        working-directory: ./modules
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
