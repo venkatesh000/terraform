@@ -19,7 +19,7 @@ on:
         default: 'modules/EC2'
         type: choice
         options:
-          - EC2
+          - modules/EC2
           
 
 permissions:
