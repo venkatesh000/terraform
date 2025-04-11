@@ -1,0 +1,99 @@
+name: "Infrastructure As Code"
+on:
+# Allows you to run this workflow manually from the Actions tab
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+ workflow_dispatch:
+    inputs:
+      command:
+        description: 'Select Terraform Action'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+    #   resource:
+    #     description: 'Select the resource'
+    #     required: true
+    #     default: 'network/vpc'
+    #     type: choice
+    #     options:
+    #       - EKS
+    #       - Redis
+
+permissions:
+      id-token: write # This is required for aws oidc connection
+      contents: read # This is required for actions/checkout
+      pull-requests: write # This is required for gh bot to comment PR
+env:
+  #TF_LOG: INFO
+  AWS_REGION: us-east-1
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    name: Infra Creation
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./resources
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+######################## Setup the AWS Credentials using the ODIC method ######################## 
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::664418972488:role/githubaction-role
+          aws-region: us-east-1
+          role-session-name: GitHub-OIDC-TERRAFORM
+
+######################## Install the Terraform tool in the image ######################## 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.2.5
+          
+######################## Run the Terraform init command ######################## 
+
+      - name: Terraform Init
+        id: init
+        run: |
+          echo "Change Directory"
+          cd "${{ github.event.inputs.resource }}"
+          terraform init           
+
+######################## Run the Terraform Plan command ######################## 
+
+      - name: Terraform plan
+        id: plan
+        if: github.event.inputs.command == 'plan'
+        run: |
+          echo "Change Directory"
+          cd ${{ github.event.inputs.resource }}
+          terraform plan -input=false          
+        continue-on-error: false
+
+######################## Run the Terraform Apply command ######################## 
+
+      - name: Terraform Apply
+        id: apply
+        if: github.event.inputs.command == 'apply'
+        run: |
+          echo "Change Directory"
+          cd ${{ github.event.inputs.resource }}
+          terraform plan -input=false
+          sleep 10
+          terraform apply -auto-approve          
+        continue-on-error: false
+
+######################## Run the Terraform Destroy command ######################## 
+
+      - name: Terraform Destroy
+        id: destroy
+        if: github.event.inputs.command == 'destroy'
+        run: |
+          echo "Change Directory"
+          cd ${{ github.event.inputs.resource }}
+          terraform destroy -auto-approve          
+        continue-on-error: false
