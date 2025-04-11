@@ -13,14 +13,14 @@ on:
           - plan
           - apply
           - destroy
-    #   resource:
-    #     description: 'Select the resource'
-    #     required: true
-    #     default: 'network/vpc'
-    #     type: choice
-    #     options:
-    #       - EKS
-    #       - Redis
+      resource:
+        description: 'Select the resource'
+        required: true
+        default: 'modules/EC2'
+        type: choice
+        options:
+          - EC2
+          
 
 permissions:
       id-token: write # This is required for aws oidc connection
