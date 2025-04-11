@@ -3,7 +3,7 @@ variable "aws_region" {
 }
 
 variable "ami_id" {
-  default = "ami-0c02fb55956c7d316" # Amazon Linux 2 AMI for us-east-1
+  default = "ami-0c02fb55956c7d316" # Amazon Linux 2 AMI for us-east-1 of
 }
 
 variable "instance_type" {
