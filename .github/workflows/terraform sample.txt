@@ -1,0 +1,84 @@
+name: "Infrastructure As Code"
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Select Terraform Action'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+      resource:
+        description: 'Select the resource'
+        required: true
+        default: 'modules/EC2'
+        type: choice
+        options:
+          - modules/EC2
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    name: Infra Creation
+
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::664418972488:role/githubaction-role
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.2.5
+
+      - name: Terraform Init
+        id: init
+        run: |
+          echo "Running terraform init in ${{ github.event.inputs.resource }}"
+          cd "${{ github.event.inputs.resource }}"
+          terraform init
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event.inputs.command == 'plan'
+        run: |
+          echo "Running terraform plan in ${{ github.event.inputs.resource }}"
+          cd "${{ github.event.inputs.resource }}"
+          terraform plan -input=false -out=tfplan
+          echo "plan_path=tfplan" >> $GITHUB_OUTPUT
+
+      - name: Terraform Apply
+        id: apply
+        if: github.event.inputs.command == 'apply'
+        run: |
+          echo "Running terraform apply in ${{ github.event.inputs.resource }}"
+          cd "${{ github.event.inputs.resource }}"
+          terraform plan -input=false -out=tfplan
+          sleep 5
+          terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        id: destroy
+        if: github.event.inputs.command == 'destroy'
+        run: |
+          echo "Running terraform destroy in ${{ github.event.inputs.resource }}"
+          cd "${{ github.event.inputs.resource }}"
+          terraform destroy -auto-approve
