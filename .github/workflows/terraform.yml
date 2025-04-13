@@ -60,8 +60,6 @@ jobs:
         id: init
         run: |
           echo " running terraform init"
-        #   echo "Change Directory"
-        #   cd "${{ github.event.inputs.resource }}"
           terraform init           
 
 ######################## Run the Terraform Plan command ######################## 
@@ -71,8 +69,6 @@ jobs:
         if: github.event.inputs.command == 'plan'
         run: |
           echo " running terraform plan"
-        #   echo "Change Directory"
-        #   cd ${{ github.event.inputs.resource }}
           terraform plan -input=false          
         continue-on-error: false
 
@@ -83,8 +79,6 @@ jobs:
         if: github.event.inputs.command == 'apply'
         run: |
           echo " running terraform apply"
-        #   echo "Change Directory"
-        #   cd ${{ github.event.inputs.resource }}
           terraform plan -input=false
           sleep 10
           terraform apply -auto-approve          
@@ -97,7 +91,5 @@ jobs:
         if: github.event.inputs.command == 'destroy'
         run: |
           echo " running terraform destory"
-        #   echo "Change Directory"
-        #   cd ${{ github.event.inputs.resource }}
           terraform destroy -auto-approve          
         continue-on-error: false
